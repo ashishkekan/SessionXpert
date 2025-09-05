@@ -3,7 +3,13 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
 from django.forms import DateTimeInput
 
-from management.models import Department, ExternalTopic, SessionTopic, UserProfile
+from management.models import (
+    Department,
+    ExternalTopic,
+    SessionMaterials,
+    SessionTopic,
+    UserProfile,
+)
 
 
 class DepartmentForm(forms.ModelForm):
@@ -190,3 +196,42 @@ class SessionUploadForm(forms.Form):
         help_text="Upload an Excel file (.xlsx) containing session data.",
         widget=forms.FileInput(attrs={"accept": ".xlsx"}),
     )
+
+
+class SessionMaterialsForm(forms.ModelForm):
+    """
+    Form for uploading materials (files and media) associated with a SessionTopic.
+    Supports Excel, PPT, PDF, ZIP files for documents and MP4, MOV, AVI for media.
+    """
+
+    class Meta:
+        model = SessionMaterials
+        fields = ["session", "file", "media", "description"]
+        widgets = {
+            "session": forms.Select(attrs={"class": "form-control"}),
+            "file": forms.FileInput(
+                attrs={"accept": ".xlsx,.xls,.ppt,.pptx,.pdf,.zip"}
+            ),
+            "media": forms.FileInput(attrs={"accept": ".mp4,.mov,.avi"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ensure only active sessions are available for selection
+        self.fields["session"].queryset = SessionTopic.objects.filter(status="Pending")
+        for field in self.fields.values():
+            field.widget.attrs.update({"class": "custom-input"})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        file = cleaned_data.get("file")
+        media = cleaned_data.get("media")
+
+        # Ensure at least one of file or media is provided
+        if not file and not media:
+            raise forms.ValidationError(
+                "You must upload either a file or a media file."
+            )
+
+        return cleaned_data

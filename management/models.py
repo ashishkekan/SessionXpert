@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from django.core.validators import FileExtensionValidator
 
 STATUSES = [
     ("Pending", "Pending"),
@@ -138,3 +139,48 @@ class RecentActivity(models.Model):
         String representation of the activity, showing the username and a snippet of the description.
         """
         return f"{self.user.username} - {self.description[:30]}"
+
+
+class SessionMaterials(models.Model):
+    """
+    Represents materials associated with a session topic, including files and media.
+
+    Fields:
+        session (ForeignKey): The session topic the materials are associated with.
+        file (FileField, optional): A file upload field for documents (Excel, PPT, PDF, ZIP).
+        media (FileField, optional): A file upload field for media files (e.g., videos).
+        uploaded_by (ForeignKey): The user who uploaded the material.
+        uploaded_at (DateTimeField): The date and time when the material was uploaded.
+        description (TextField, optional): A brief description of the material.
+    """
+
+    session = models.ForeignKey(
+        SessionTopic, on_delete=models.CASCADE, related_name="materials"
+    )
+    file = models.FileField(
+        upload_to="session_materials/files/",
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["xlsx", "xls", "ppt", "pptx", "pdf", "zip"]
+            )
+        ],
+        null=True,
+        blank=True,
+    )
+    media = models.FileField(
+        upload_to="session_materials/media/",
+        validators=[FileExtensionValidator(allowed_extensions=["mp4", "mov", "avi"])],
+        null=True,
+        blank=True,
+    )
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        """
+        String representation of the session material, showing the session topic and file/media name.
+        """
+        file_name = self.file.name.split("/")[-1] if self.file else "No File"
+        media_name = self.media.name.split("/")[-1] if self.media else "No Media"
+        return f"{self.session.topic} - {file_name if self.file else media_name}"

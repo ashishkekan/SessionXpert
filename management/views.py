@@ -20,6 +20,7 @@ from management.forms import (
     CustomPasswordChangeForm,
     DepartmentForm,
     ExternalTopicForm,
+    SessionMaterialsForm,
     SessionTopicForm,
     SessionUploadForm,
     UserCreationForm,
@@ -31,6 +32,7 @@ from management.models import (
     Department,
     ExternalTopic,
     RecentActivity,
+    SessionMaterials,
     SessionTopic,
 )
 from management.utils import log_activity
@@ -78,7 +80,7 @@ def home(request):
         HttpResponse: Rendered home page with context.
     """
     user = request.user
-    latest_topics = ExternalTopic.objects.order_by("-created_at")
+    latest_topics = ExternalTopic.objects.order_by("-created_at")[:5]
 
     context = {
         "learning_topics": latest_topics,
@@ -87,13 +89,6 @@ def home(request):
         SessionTopic.objects.filter(
             date__gt=now(),
         )
-        .exclude(status__in=["Completed", "Cancelled"])
-        .select_related("conducted_by")
-        .order_by("date")[:3]
-    )
-
-    top_sessions = (
-        SessionTopic.objects.filter(date__gt=now())
         .exclude(status__in=["Completed", "Cancelled"])
         .select_related("conducted_by")
         .order_by("date")[:3]
@@ -815,3 +810,76 @@ def upload_sessions_excel(request):
             return redirect("session_list")
 
     return redirect("session_list")
+
+
+@login_required
+def upload_session_material(request):
+    """
+    Handle file and media uploads for SessionMaterials.
+
+    Allows users to upload files (Excel, PPT, PDF, ZIP) or media (MP4, MOV, AVI)
+    associated with a SessionTopic. Logs the activity upon successful upload.
+
+    Returns:
+        HttpResponse: Rendered form or redirect on success.
+    """
+    if request.method == "POST":
+        form = SessionMaterialsForm(request.POST, request.FILES)
+        if form.is_valid():
+            material = form.save(commit=False)
+            material.uploaded_by = request.user
+            material.save()
+            file_name = (
+                material.file.name.split("/")[-1]
+                if material.file
+                else material.media.name.split("/")[-1] if material.media else "Unknown"
+            )
+            log_activity(
+                request.user,
+                f"Uploaded material '{file_name}' for session '{material.session.topic}'.",
+                target_users=(
+                    User.objects.filter(is_staff=True)
+                    if not request.user.is_staff
+                    else User.objects.filter(is_staff=False)
+                ),
+            )
+            messages.success(request, "Material uploaded successfully.")
+            return redirect("session_materials_list")
+        else:
+            messages.error(request, "Error uploading material. Please check the form.")
+    else:
+        form = SessionMaterialsForm()
+    return render(request, "session/upload_material.html", {"form": form})
+
+
+@login_required
+def session_materials_list(request):
+    """
+    Display a paginated list of session materials.
+
+    - Admins see all materials.
+    - Regular users see materials for their own sessions.
+
+    Returns:
+        HttpResponse: Rendered list of materials.
+    """
+    if request.user.is_staff:
+        materials = (
+            SessionMaterials.objects.all()
+            .select_related("session", "session__conducted_by", "uploaded_by")
+            .order_by("-uploaded_at")
+        )
+    else:
+        materials = (
+            SessionMaterials.objects.filter(session__conducted_by=request.user)
+            .select_related("session", "session__conducted_by", "uploaded_by")
+            .order_by("-uploaded_at")
+        )
+
+    paginator = Paginator(materials, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request, "session/session_materials_list.html", {"materials": page_obj}
+    )

@@ -81,7 +81,7 @@ WSGI_APPLICATION = "session_management.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "session_management",
+        "NAME": "sms",
         "USER": "postgres",
         "PASSWORD": "Lemon@123",
         "HOST": "localhost",
@@ -130,6 +130,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "management/static"),
 ]
 
+
+# settings.py
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
