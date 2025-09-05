@@ -844,7 +844,7 @@ def upload_session_material(request):
                 ),
             )
             messages.success(request, "Material uploaded successfully.")
-            return redirect("session_materials_list")
+            return redirect("session-materials-list")
         else:
             messages.error(request, "Error uploading material. Please check the form.")
     else:

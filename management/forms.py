@@ -219,7 +219,7 @@ class SessionMaterialsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Ensure only active sessions are available for selection
-        self.fields["session"].queryset = SessionTopic.objects.filter(status="Pending")
+        self.fields["session"].queryset = SessionTopic.objects.filter(status="Completed")
         for field in self.fields.values():
             field.widget.attrs.update({"class": "custom-input"})
 
