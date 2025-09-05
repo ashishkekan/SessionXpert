@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
-from django.core.validators import FileExtensionValidator
 
 STATUSES = [
     ("Pending", "Pending"),
@@ -169,7 +169,7 @@ class SessionMaterials(models.Model):
     )
     media = models.FileField(
         upload_to="session_materials/media/",
-        validators=[FileExtensionValidator(allowed_extensions=["mp4", "mov", "avi"])],
+        validators=[FileExtensionValidator(allowed_extensions=["mp4", "mov", "avi", "webm"])],
         null=True,
         blank=True,
     )

@@ -212,7 +212,7 @@ class SessionMaterialsForm(forms.ModelForm):
             "file": forms.FileInput(
                 attrs={"accept": ".xlsx,.xls,.ppt,.pptx,.pdf,.zip"}
             ),
-            "media": forms.FileInput(attrs={"accept": ".mp4,.mov,.avi"}),
+            "media": forms.FileInput(attrs={"accept": ".mp4,.mov,.avi,.webm"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 
