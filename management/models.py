@@ -48,6 +48,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         """

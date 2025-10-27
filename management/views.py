@@ -109,7 +109,7 @@ def home(request):
                     "date"
                 )[:3],
                 "cancelled": SessionTopic.objects.filter(status="Cancelled").order_by(
-                    "date"
+                    "-date"
                 )[:3],
             }
         )
@@ -622,7 +622,7 @@ def export_sessions(request):
     Generate and download an Excel file containing all 'Pending' session data, sorted by date.
     """
     # Fetch all pending sessions and convert to list of dicts
-    sessions = SessionTopic.objects.filter(status="Pending").select_related(
+    sessions = SessionTopic.objects.all().select_related(
         "conducted_by"
     )
 
@@ -863,18 +863,11 @@ def session_materials_list(request):
     Returns:
         HttpResponse: Rendered list of materials.
     """
-    if request.user.is_staff:
-        materials = (
-            SessionMaterials.objects.all()
-            .select_related("session", "session__conducted_by", "uploaded_by")
-            .order_by("-uploaded_at")
-        )
-    else:
-        materials = (
-            SessionMaterials.objects.filter(session__conducted_by=request.user)
-            .select_related("session", "session__conducted_by", "uploaded_by")
-            .order_by("-uploaded_at")
-        )
+    materials = (
+        SessionMaterials.objects.all()
+        .select_related("session", "session__conducted_by", "uploaded_by")
+        .order_by("-uploaded_at")
+    )
 
     paginator = Paginator(materials, 10)
     page_number = request.GET.get("page")
