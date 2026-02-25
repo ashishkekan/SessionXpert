@@ -294,7 +294,7 @@ def user_list(request):
     department_id = request.GET.get("department")
     departments = Department.objects.all()
 
-    users = User.objects.all().order_by("username").select_related("userprofile")
+    users = User.objects.filter(is_active=True).order_by("username").select_related("userprofile")
 
     if department_id:
         users = users.filter(userprofile__department_id=department_id)
