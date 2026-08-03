@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from management.models import ExternalTopic, SessionTopic
+from management.models import ExternalTopic, SessionMaterials, SessionTopic
 
 
 @admin.register(SessionTopic)
@@ -42,3 +42,16 @@ class ExternalTopicAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     search_fields = ("coming_soon",)
     ordering = ("-created_at",)
+
+
+@admin.register(SessionMaterials)
+class SessionMaterialsAdmin(admin.ModelAdmin):
+    """
+    Admin configuration for ExternalTopic model to customize the display
+    and functionality in the Django admin interface.
+    """
+
+    list_display = ("session_id", "file", "media", "uploaded_by", "uploaded_at", "description")
+    list_filter = ("uploaded_by",)
+    search_fields = ("uploaded_by", "uploaded_at", "description")
+    ordering = ("-uploaded_at",)

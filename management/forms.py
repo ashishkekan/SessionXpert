@@ -111,7 +111,7 @@ class UserEditForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "username", "email"]
+        fields = ["first_name", "last_name", "username", "email", "is_active"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -219,7 +219,9 @@ class SessionMaterialsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Ensure only active sessions are available for selection
-        self.fields["session"].queryset = SessionTopic.objects.filter(status="Completed")
+        self.fields["session"].queryset = SessionTopic.objects.filter(
+            status="Completed"
+        )
         for field in self.fields.values():
             field.widget.attrs.update({"class": "custom-input"})
 
